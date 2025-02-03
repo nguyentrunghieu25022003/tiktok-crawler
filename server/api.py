@@ -15,7 +15,7 @@ async def root():
     return { "message": "TikTok API running..." }
 
 @app.get("/hashtag/{hashtag}")
-async def get_videos(hashtag: str, count: int = 200):
+async def get_videos(hashtag: str, count: int = 30, page: int = 1):
     try:
         api = TikTokApi()
         
@@ -29,7 +29,7 @@ async def get_videos(hashtag: str, count: int = 200):
         )
 
         videos = []
-        async for video in api.hashtag(name=hashtag).videos(count=count):
+        async for video in api.hashtag(name=hashtag).videos(count=count, page=page):
             videos.append(video.as_dict)
             
         await api.stop_playwright()

@@ -82,59 +82,56 @@ class Hashtag:
         self.__extract_from_data()
         return resp
 
-    async def videos(self, count=30, cursor=0, **kwargs) -> Iterator[Video]: # type: ignore
+    async def videos(self, count: int = 30, page: int = 1, **kwargs) -> Iterator[Video]:  # type: ignore
         """
-        Returns TikTok videos that have this hashtag in the caption.
+        Returns TikTok videos that have this hashtag in the caption,
+        sử dụng phương pháp phân trang đơn giản theo số trang.
 
         Args:
-            count (int): The amount of videos you want returned.
-            cursor (int): The the offset of videos from 0 you want to get.
+            count (int): Số lượng video cần lấy.
+            page (int): Số trang, trang 1 có cursor là 0, trang 2 cursor là 30, trang 3 là 60, v.v.
+        **kwargs: Các tham số bổ sung (ví dụ ms_token, headers, session_index).
 
         Returns:
             async iterator/generator: Yields TikTokApi.video objects.
 
-        Raises:
-            InvalidResponseException: If TikTok returns an invalid response, or one we don't understand.
-
         Example Usage:
             .. code-block:: python
 
-                async for video in api.hashtag(name='funny').videos():
-                    # do something
+                async for video in api.hashtag(name='funny').videos(page=2, count=30, ms_token="your_ms_token"):
+                    print(video.id)
         """
-
-        id = getattr(self, "id", None)
-        if id is None:
+        if getattr(self, "id", None) is None:
             await self.info(**kwargs)
+    
+        cursor = (page - 1) * 30
 
         found = 0
-        while found < count:
-            params = {
-                "challengeID": self.id,
-                "count": 35,
-                "cursor": cursor,
-            }
+        params = {
+            "challengeID": self.id,
+            "count": count,
+            "cursor": cursor,
+        }
 
-            resp = await self.parent.make_request(
-                url="https://www.tiktok.com/api/challenge/item_list/",
-                params=params,
-                headers=kwargs.get("headers"),
-                session_index=kwargs.get("session_index"),
-            )
+        resp = await self.parent.make_request(
+            url="https://www.tiktok.com/api/challenge/item_list/",
+            params=params,
+            headers=kwargs.get("headers"),
+            session_index=kwargs.get("session_index"),
+        )
 
-            if resp is None:
-                raise InvalidResponseException(
-                    resp, "TikTok returned an invalid response."
-                )
+        if resp is None:
+            raise InvalidResponseException(resp, "TikTok returned an invalid response.")
 
-            for video in resp.get("itemList", []):
-                yield self.parent.video(data=video)
-                found += 1
+        for video in resp.get("itemList", []):
+            yield self.parent.video(data=video)
+            found += 1
 
-            if not resp.get("hasMore", False):
-                return
+        # Optionally, nếu bạn muốn trả về cursor kế tiếp để client biết trang tiếp theo,
+        # bạn có thể bổ sung vào response hoặc log ra.
+        next_cursor = resp.get("cursor")
+        print(f"Calculated cursor for page {page}: {cursor}, next_cursor from API: {next_cursor}")
 
-            cursor = resp.get("cursor")
 
     def __extract_from_data(self):
         data = self.as_dict
