@@ -127,8 +127,6 @@ class Hashtag:
             yield self.parent.video(data=video)
             found += 1
 
-        # Optionally, nếu bạn muốn trả về cursor kế tiếp để client biết trang tiếp theo,
-        # bạn có thể bổ sung vào response hoặc log ra.
         next_cursor = resp.get("cursor")
         print(f"Calculated cursor for page {page}: {cursor}, next_cursor from API: {next_cursor}")
 

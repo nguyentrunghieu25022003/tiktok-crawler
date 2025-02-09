@@ -21,6 +21,7 @@ from .api.trending import Trending
 from .api.search import Search
 from .api.playlist import Playlist
 from .api.place import Place
+from .api.searchVideo import SearchVideo
 
 from .exceptions import (
     InvalidJSONException,
@@ -60,6 +61,7 @@ class TikTokApi:
     search = Search
     playlist = Playlist
     place = Place
+    searchVideo = SearchVideo
 
     def __init__(self, logging_level: int = logging.WARN, logger_name: str = None):
         """
@@ -84,6 +86,7 @@ class TikTokApi:
         Search.parent = self
         Playlist.parent = self
         Place.parent = self
+        SearchVideo.parent = self
 
     def __create_logger(self, name: str, level: int = logging.DEBUG):
         """Create a logger for the class."""
