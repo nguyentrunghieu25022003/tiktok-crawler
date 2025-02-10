@@ -7,7 +7,6 @@ from ..exceptions import InvalidResponseException
 if TYPE_CHECKING:
     from ..tiktok import TikTokApi
 
-
 class Search:
     """Contains static methods about searching TikTok for a phrase."""
 

@@ -17,8 +17,9 @@ json_path = os.path.join(current_dir, "..", "poi_ids.json")
 try:
     poi_data = load_json(json_path)
 except Exception as e:
-
     poi_data = {}
+    
+PROXY = "http://10.0.47.102:3128"
 
 @app.get("/")
 async def root():
@@ -35,7 +36,7 @@ async def get_videos(hashtag: str, count: int = 30, page: int = 1):
             num_sessions=1, 
             sleep_after=3, 
             browser="chromium",
-            headless=False
+            headless=False,
         )
 
         videos = []
@@ -55,29 +56,17 @@ async def get_videos(hashtag: str, count: int = 30, page: int = 1):
 async def get_videos(hashtag: str, count: int = 30, page: int = 1):
     try:
         api = TikTokApi()
-        await api.start_playwright()
-        await api.create_sessions(
-            num_sessions=1, 
-            sleep_after=3, 
-            browser="chromium",
-            headless=True
-        )
-        
         place_instance = api.place(data=poi_data, parent=api)
-
         videos = []
-        async for video in place_instance.videos(hashtag=hashtag, count=count, cursor=(page-1)*count):
+        cursor = (page - 1) * count
+        async for video in place_instance.videos(hashtag=hashtag, count=count, cursor=cursor):
             videos.append(video.as_dict)
-            
-        await api.stop_playwright()
-
         return { "videos": videos, "total": len(videos) }
-
     except Exception as e:
         import traceback
         error_message = traceback.format_exc()
         return { "error": str(e), "traceback": error_message }
-    
+
 @app.get("/search")
 async def get_videos(keyword: str, offset: int = 0):
     try:
@@ -87,7 +76,7 @@ async def get_videos(keyword: str, offset: int = 0):
             num_sessions=1, 
             sleep_after=3, 
             browser="chromium",
-            headless=False
+            headless=False,
         )
         
         search_video = api.searchVideo(keyword=keyword, parent=api)
